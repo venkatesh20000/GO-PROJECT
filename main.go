@@ -1,56 +1,51 @@
+cat > main.go <<EOF
 package main
 
 import (
-	"fmt"
-	"html/template"
-	"net/http"
+    "encoding/json"
+    "fmt"
+    "log"
+    "net/http"
 )
 
-var validCredentials = map[string]string{
-	"username": "admin",
-	"password": "password123",
+// User represents a user with a username and password
+type User struct {
+    Username string \`json:"username"\`
+    Password string \`json:"password"\`
 }
 
-func loginPage(w http.ResponseWriter, r *http.Request) {
-	// Check if the method is POST
-	if r.Method == http.MethodPost {
-		username := r.FormValue("username")
-		password := r.FormValue("password")
+// hardcoded username and password
+var validUsername = "admin"
+var validPassword = "password123"
 
-		// Validate credentials
-		if username == validCredentials["username"] && password == validCredentials["password"] {
-			http.Redirect(w, r, "/success", http.StatusFound)
-			return
-		} else {
-			// If credentials are wrong, show an error message
-			tmpl, err := template.ParseFiles("templates/login.html")
-			if err != nil {
-				http.Error(w, "Error loading page", http.StatusInternalServerError)
-				return
-			}
-			tmpl.Execute(w, "Invalid username or password")
-			return
-		}
-	}
+// loginHandler handles the login request
+func loginHandler(w http.ResponseWriter, r *http.Request) {
+    if r.Method != http.MethodPost {
+        http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+        return
+    }
 
-	// Display the login page if method is GET
-	tmpl, err := template.ParseFiles("templates/login.html")
-	if err != nil {
-		http.Error(w, "Error loading page", http.StatusInternalServerError)
-		return
-	}
-	tmpl.Execute(w, nil)
-}
+    var user User
+    err := json.NewDecoder(r.Body).Decode(&user)
+    if err != nil {
+        http.Error(w, "Bad request", http.StatusBadRequest)
+        return
+    }
 
-func successPage(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "Login Successful!")
+    // Check the username and password
+    if user.Username == validUsername && user.Password == validPassword {
+        w.WriteHeader(http.StatusOK)
+        fmt.Fprintln(w, "Login successful!")
+    } else {
+        w.WriteHeader(http.StatusUnauthorized)
+        fmt.Fprintln(w, "Invalid username or password")
+    }
 }
 
 func main() {
-	http.HandleFunc("/", loginPage)       // Handle login page
-	http.HandleFunc("/success", successPage) // Handle success page
+    http.HandleFunc("/login", loginHandler)
 
-	// Start the web server
-	fmt.Println("Starting server on :8080...")
-	http.ListenAndServe(":8080", nil)
+    fmt.Println("Starting server on port 8080...")
+    log.Fatal(http.ListenAndServe(":8080", nil))
 }
+EOF
