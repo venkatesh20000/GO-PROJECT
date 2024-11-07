@@ -1,0 +1,26 @@
+pipeline {
+    agent any
+    stages {
+        stage('Clone Repository') {
+            steps {
+                git url: 'https://https://github.com/venkatesh20000/GO-PROJECT.git', branch: 'main'
+            }
+        }
+        stage('Install Dependencies') {
+            steps {
+                sh 'go mod tidy'
+            }
+        }
+        stage('Build') {
+            steps {
+                sh 'make build'
+            }
+        }
+        stage('Test') {
+            steps {
+                sh 'nohup ./GO-PROJECT & sleep 5'
+                sh 'make test'
+            }
+        }
+    }
+}
