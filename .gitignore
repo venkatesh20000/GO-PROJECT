@@ -1,0 +1,20 @@
+cat > .gitignore <<EOF
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Test binary, build, and cache files
+*.test
+*.out
+*.log
+
+# Dependency directory created by `go mod`
+/vendor/
+
+# IDE and editor-specific files
+.vscode/
+.idea/
+EOF
